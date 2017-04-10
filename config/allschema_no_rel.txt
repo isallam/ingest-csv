@@ -1,0 +1,42 @@
+UPDATE SCHEMA
+{
+	CREATE CLASS Address 
+	{
+			id:            Integer {Encoding: Unsigned}, 
+			street_number: String,
+			street_name:   String,
+			city:          String,
+			state:         String,
+			zip:           Integer {Encoding: Unsigned}
+	}
+
+	CREATE CLASS Person
+	{
+			id:            Integer {Encoding: Unsigned},
+			first_name:    String,
+			middle_name:   String,
+			last_name:     String,
+			date_of_birth: Date,
+			sex:           String
+	}
+
+	CREATE CLASS Phone
+	{
+			id:            Integer {Encoding: Unsigned},
+			phone_number:  String
+	}
+
+	CREATE CLASS PhoneCall
+	{
+			from_number:   String,
+			to_number:     String,
+			call_time:     DateTime,
+			call_duration: Integer {Encoding: Unsigned}
+	}
+
+	CREATE CLASS Location
+	{
+			latitude:      Float,
+			Longitude:     Float
+	}
+};

@@ -1,0 +1,13 @@
+{
+	"ClassName": "Phone",
+	"Integers": [{"SchemaName": "id",            "RawName": "index"}], 
+	"Strings" : [{"SchemaName": "phone_number", "RawName": "phone_number"}],
+	"Relationships": [
+							{ "RelationshipName" : "owner",
+								"ToClass"          : "Person",
+								"Key" : [
+									{ "SchemaName": "id",  "RawName": "person_index" }
+								]
+							}]
+}
+

@@ -1,0 +1,23 @@
+{
+	"ClassName": "Address",
+	"Integers": [{"SchemaName": "id",            "RawName": "index"}, 
+               {"SchemaName": "zip",           "RawName": "zip"}],
+	"Strings" : [{"SchemaName": "street_number", "RawName": "street_number"}, 
+               {"SchemaName": "street_name",   "RawName": "street_name"},
+               {"SchemaName": "city",          "RawName": "city"},
+               {"SchemaName": "state",         "RawName": "state"}],
+	"Relationships": [
+							{ "RelationshipName"       : "owner",
+								"ToClass"                : "Person",
+                "ToClassRelationshipName": "lives_at",
+								"Key" : [{ "SchemaName": "id",  "RawName": "person_index" }]
+							},
+							{ "RelationshipName" : "geo_location",
+								"ToClass"          : "Location",
+								"Key" : [
+									{ "SchemaName": "latitude",  "RawName": "geo_latitude" },
+									{ "SchemaName": "longitude", "RawName": "geo_longitude" }
+								]
+							}]
+}
+

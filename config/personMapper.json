@@ -1,0 +1,10 @@
+{
+	"ClassName": "Person",
+	"Integers": [{"SchemaName": "id",            "RawName": "index"}],
+	"Strings" : [{"SchemaName": "first_name",    "RawName": "first_name"}, 
+               {"SchemaName": "middle_name",   "RawName": "middle_name"},
+               {"SchemaName": "last_name",     "RawName": "last_name"},
+               {"SchemaName": "sex",           "RawName": "sex"}],
+  "Dates"   : [{"SchemaName": "date_of_birth", "RawName": "date_of_birth"}]
+}
+

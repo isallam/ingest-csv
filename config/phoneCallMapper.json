@@ -7,12 +7,12 @@
 	"Relationships": [
               {"RelationshipName" : "from_phone",
                "ToClass"          : "Phone",
-               "ToClassRelationshipName": "", 
+               "ToClassRelationshipName": "calls", 
                 "Key": [{"SchemaName": "phone_number", "RawName":"from_number"}]
               },
               {"RelationshipName" : "to_phone",
                "ToClass"          : "Phone",
-               "ToClassRelationshipName": "", 
+               "ToClassRelationshipName": "calls", 
                 "Key": [{"SchemaName": "phone_number", "RawName":"to_number"}]
               },
 							{ "RelationshipName" : "from_location",

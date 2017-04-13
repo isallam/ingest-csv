@@ -6,13 +6,14 @@ sourceCompatibility = '1.8'
 
 ext{
     projectPath    =   projectDir.getAbsolutePath()
-    objyVersion    =   project.hasProperty("objyVersion")      ?   project.getProperty('objyVersion')      : "12.4.0"
-    thingspanhome  =   project.hasProperty("thingspanhome")    ?   project.getProperty('thingspanhome')    :   '/opt' + File.separator + 'ThingSpan' + File.separator + '15.4'
-    fdname         =   project.hasProperty('fdname')           ?   project.getProperty('fdname')           :   'testfd'
-    fddirhost      =   project.hasProperty('fddirhost')        ?   project.getProperty('fddirhost')        :   java.net.InetAddress.getLocalHost().getHostName();
-    fddirpath      =   project.hasProperty('fddirpath')        ?   project.getProperty('fddirpath')        :   projectPath  + File.separator + 'data' + File.separator
+    objyVersion    =   project.hasProperty("objyVersion")  ? project.getProperty('objyVersion')  : "12.4.0"
+    thingspanhome  =   project.hasProperty("thingspanhome")? project.getProperty('thingspanhome'): '/opt' + File.separator + 'ThingSpan' + File.separator + '15.4'
+    fdname         =   project.hasProperty('fdname')       ? project.getProperty('fdname')       : 'testfd'
+    fddirhost      =   project.hasProperty('fddirhost')    ? project.getProperty('fddirhost')    : java.net.InetAddress.getLocalHost().getHostName();
+    fddirpath      =   project.hasProperty('fddirpath')    ? project.getProperty('fddirpath')    : projectPath  + File.separator + 'data' + File.separator
     objydbcorepath =   "${thingspanhome}${File.separator}lib${File.separator}"
-    sourcedatadir	   =   project.hasProperty('sourcedatadir')	    ?   project.getProperty('sourcedatadir')	    :   "${projectPath}${File.separator}sourcedata${File.separator}"
+    sourcedatadir  =   project.hasProperty('sourcedatadir')? project.getProperty('sourcedatadir'): "${projectPath}${File.separator}source-data${File.separator}"
+    mapperdir	   =   project.hasProperty('mapperdir')	   ? project.getProperty('mapperdir')	 : "${projectPath}${File.separator}config${File.separator}"
 }	
 
 // NetBeans will automatically add "run" and "debug" tasks relying on the
@@ -61,20 +62,38 @@ task fatJar(type: Jar, dependsOn: 'build'){
     baseName 'ingest-csv'
 }
 
-task testIngestAddress(type: JavaExec, dependsOn: ['build', 'fatJar']){
+task testIngestAddresses(type: JavaExec, dependsOn: ['build', 'fatJar']){
 	classpath = sourceSets.main.runtimeClasspath
 	standardInput = System.in
 	main = 'com.objy.se.IngestCSV'
-	args "-bootfile", "${projectPath}/data/testfd.boot",
-         "-csvfile" , "${projectPath}/source-data/addresses.csv",
-         "-mapper", "${projectPath}/config/addressMapper.json"
+	args "-bootfile", "${fddirpath}${fdname}.boot",
+         "-csvfile" , "${sourcedatadir}addresses.csv",
+         "-mapper", "${mapperdir}addressMapper.json"
 }
 
-task testIngestPerson(type: JavaExec, dependsOn: ['build', 'fatJar']){
+task testIngestPersons(type: JavaExec, dependsOn: ['build', 'fatJar']){
 	classpath = sourceSets.main.runtimeClasspath
 	standardInput = System.in
 	main = 'com.objy.se.IngestCSV'
-	args "-bootfile", "${projectPath}/data/testfd.boot",
-         "-csvfile" , "${projectPath}/source-data/people.csv",
-         "-mapper", "${projectPath}/config/personMapper.json"
+	args "-bootfile", "${fddirpath}${fdname}.boot",
+         "-csvfile" , "${sourcedatadir}people.csv",
+         "-mapper", "${mapperdir}personMapper.json"
+}
+
+task testIngestPhones(type: JavaExec, dependsOn: ['build', 'fatJar']){
+	classpath = sourceSets.main.runtimeClasspath
+	standardInput = System.in
+	main = 'com.objy.se.IngestCSV'
+	args "-bootfile", "${fddirpath}${fdname}.boot",
+         "-csvfile" , "${sourcedatadir}phones.csv",
+         "-mapper", "${mapperdir}phoneMapper.json"
+}
+
+task testIngestPhoneCalls(type: JavaExec, dependsOn: ['build', 'fatJar']){
+	classpath = sourceSets.main.runtimeClasspath
+	standardInput = System.in
+	main = 'com.objy.se.IngestCSV'
+	args "-bootfile", "${fddirpath}${fdname}.boot",
+         "-csvfile" , "${sourcedatadir}phonecalls0.csv",
+         "-mapper", "${mapperdir}phoneCallMapper.json"
 }

@@ -58,7 +58,6 @@ task fatJar(type: Jar, dependsOn: 'build'){
         exclude "META-INF/*.RSA"
     }
     from files(sourceSets.main.output.classesDir, sourceSets.main.output.resourcesDir)
-    zip64 true
     baseName 'ingest-csv'
 }
 

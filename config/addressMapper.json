@@ -1,5 +1,8 @@
 {
 	"ClassName": "Address",
+  "ClassKey" : [
+     {"SchemaName": "id", "RawName": "index" }
+          ],
 	"Integers": [{"SchemaName": "id",            "RawName": "index"}, 
                {"SchemaName": "zip",           "RawName": "zip"}],
 	"Strings" : [{"SchemaName": "street_number", "RawName": "street_number"}, 

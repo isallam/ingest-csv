@@ -13,6 +13,7 @@ import com.objy.se.utils.CompositeKey;
 import com.objy.se.utils.Relationship;
 import com.objy.se.utils.SingleKey;
 import com.objy.se.utils.TargetKey;
+import com.objy.se.utils.TargetList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +57,7 @@ import org.slf4j.LoggerFactory;
 
 class IngestMapper {
   private static String ClassNameJSON = "ClassName"; 
+  private static String ClassKeyJSON = "ClassKey";
   private static String StringsJSON = "Strings"; 
   private static String FloatsJSON = "Floats"; 
   private static String IntegersJSON = "Integers"; 
@@ -69,6 +71,9 @@ class IngestMapper {
   private static String KeyJSON = "Key";
   
   private String className;
+  private TargetKey classKey = null;
+  private TargetList classTargetList = null;
+  
   // map schema attribute names to raw data name
   protected HashMap<String, String> integerAttributeMap = new HashMap<>();
   protected HashMap<String, String> floatAttributeMap = new HashMap<>();
@@ -86,6 +91,12 @@ class IngestMapper {
   IngestMapper(JsonObject json) {
     // construct needed information for processing data from the jsonObject
     className = json.get(ClassNameJSON).getAsString();
+    
+    if (json.has(ClassKeyJSON))
+    {
+      JsonArray jsonArray = json.get(ClassKeyJSON).getAsJsonArray();
+      processClassKey(jsonArray);
+    }
     
     if (json.has(StringsJSON)) {
       JsonArray jsonArray = json.get(StringsJSON).getAsJsonArray();
@@ -134,6 +145,40 @@ class IngestMapper {
     
   }
 
+  private void processClassKey(JsonArray jsonArray) {
+
+      ClassAccessor classAccessor = SchemaManager.getInstance().getClassProxy(className);
+      ArrayList<JsonObject> keys = new ArrayList<>();
+      for (JsonElement keyElement : jsonArray) {
+        JsonObject keyObj = (JsonObject) keyElement;
+        keys.add(keyObj);
+      }
+      
+      if (keys.size() > 1) // composite key
+      {
+        ArrayList<SingleKey> singleKeys = new ArrayList<>();
+        for (JsonObject keyObj : keys) {
+          String keySchemaName = keyObj.get(SchemaNameJSON).getAsString();
+          String keyRawName = keyObj.get(RawNameJSON).getAsString();
+          // get the type of the keySchemaName 
+          Attribute attr = getAttribute(keySchemaName, classAccessor);
+          
+          SingleKey key = new SingleKey(keySchemaName, keyRawName, 
+                  attr.getAttributeValueSpecification().getLogicalType());
+          singleKeys.add(key);
+        }
+        classKey = new CompositeKey(singleKeys.toArray(new SingleKey[0]));
+      }
+      else {
+        JsonObject keyObj = keys.get(0);
+        String keySchemaName = keyObj.get(SchemaNameJSON).getAsString();
+        String keyRawName = keyObj.get(RawNameJSON).getAsString();
+        // get the type of the keySchemaName 
+        Attribute attr = getAttribute(keySchemaName, classAccessor);
+       classKey = new SingleKey(keySchemaName, keyRawName,
+                  attr.getAttributeValueSpecification().getLogicalType());
+      }
+    }
   
   private void processRelationships(JsonArray jsonArray) {
 
@@ -165,12 +210,7 @@ class IngestMapper {
           String keySchemaName = keyObj.get(SchemaNameJSON).getAsString();
           String keyRawName = keyObj.get(RawNameJSON).getAsString();
           // get the type of the keySchemaName 
-          Attribute attr = toClassAccessor.getAttribute(keySchemaName);
-          if (attr == null)
-          {
-            LOG.error("Attribute: {} for toClass: {} is null", keySchemaName, toClass);
-            throw new IllegalStateException("Invalid configuration... check mapper vs. schema");
-          }
+          Attribute attr = getAttribute(keySchemaName, toClassAccessor);
           SingleKey key = new SingleKey(keySchemaName, keyRawName, 
                   attr.getAttributeValueSpecification().getLogicalType());
           singleKeys.add(key);
@@ -183,7 +223,7 @@ class IngestMapper {
         String keySchemaName = keyObj.get(SchemaNameJSON).getAsString();
         String keyRawName = keyObj.get(RawNameJSON).getAsString();
         // get the type of the keySchemaName 
-        Attribute attr = toClassAccessor.getAttribute(keySchemaName);
+        Attribute attr = getAttribute(keySchemaName, toClassAccessor);
         SingleKey key = new SingleKey(keySchemaName, keyRawName,
                   attr.getAttributeValueSpecification().getLogicalType());
         rel.add(key, relationshipName, toClassRelationshipName);
@@ -212,5 +252,38 @@ class IngestMapper {
   protected List<Relationship> getRelationshipList() {
     return relationshipList;
   }
+
+  private Attribute getAttribute(String keySchemaName, ClassAccessor classAccessor) {
+    Attribute attr = classAccessor.getAttribute(keySchemaName);
+    if (attr == null)
+    {
+      LOG.error("Attribute: {} for Class: {} is null", keySchemaName, className);
+      throw new IllegalStateException("Invalid configuration... check mapper vs. schema");
+    }
+    return attr;
+  }
+
+  public boolean hasRelationships() {
+    return (!getRelationshipList().isEmpty());
+  }
   
+  public boolean hasClassKey() {
+    return classKey != null;
+  }
+  
+  public TargetList getClassTargetList() { 
+    if (classTargetList == null) {
+      // initialize TargetList
+      classTargetList = new TargetList(
+              SchemaManager.getInstance().getClassProxy(className), 
+              classKey);
+    }
+    return classTargetList; 
+  }
+
+  TargetKey getClassKey() {
+    return classKey;
+  }
+  
+
 }

@@ -36,7 +36,7 @@ public class ClassAccessor {
   
   //protected static ArrayList<String> attributeList = new ArrayList<>();
   protected HashMap<String, Attribute> attributeMap = new HashMap<>();
-  private IngestMapper mapper;
+  private IngestMapper mapper = null;
   
   public ClassAccessor(String className)
   {
@@ -76,7 +76,17 @@ public class ClassAccessor {
   public Instance createObject(CSVRecord record)
   {
     
-    Instance instance = createInstance();
+    Instance instance = null;
+    
+    // check if we already have the instance
+    if (mapper.hasClassKey())
+    {
+      instance = mapper.getClassTargetList().getTargetObject(record, mapper.getClassKey());
+    }
+    
+    if (instance == null) {
+      instance = createInstance();
+    }
 
     // iterate all relationships and resolve references
     for (Relationship rel : mapper.getRelationshipList())

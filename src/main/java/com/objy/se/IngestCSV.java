@@ -107,26 +107,43 @@ public class IngestCSV {
     int objCount = 0;
     try {
       Reader in;
-      // pass 1: process the ID and MSISDNsfrom the file and cache oids.
+      // pass 1: process the keys and related types from the file and cache oids.
       in = new FileReader(fileName);
-      // parse organization and find ID info.
+      // parse the file and pick the keys needed.
       records = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
-      if (mapper.getRelationshipList().size() > 0) {
+      boolean doProcessForRelationships = mapper.hasRelationships();
+      boolean doProcessClassKeys = mapper.hasClassKey();
+      if (doProcessClassKeys || doProcessForRelationships) {
         for (CSVRecord record : records) {
-          for (Relationship rel : mapper.getRelationshipList()) {
-            rel.getTargetList().collectTargetInfo(record);
+          if (doProcessForRelationships) {
+            for (Relationship rel : mapper.getRelationshipList()) {
+              rel.getTargetList().collectTargetInfo(record);
+            }
+          }
+          if (doProcessClassKeys) {
+            mapper.getClassTargetList().collectTargetInfo(record);
           }
         }
         // fetch the ids that exist in the FD.
-        for (Relationship rel : mapper.getRelationshipList()) {
-          rel.getTargetList().fetchTargets();
-          int count = rel.getTargetList().createMissingTargets();
-          LOG.info("created {} of {} objects", count, rel.toClassName());
+        if (doProcessForRelationships)
+        {
+          for (Relationship rel : mapper.getRelationshipList()) {
+            rel.getTargetList().fetchTargets();
+            int count = rel.getTargetList().createMissingTargets();
+            LOG.info("created {} of {} objects", count, rel.toClassName());
+          }
+        }
+        // fetch existing objects if available.
+        if (doProcessClassKeys) {
+          mapper.getClassTargetList().fetchTargets();
+          int count = mapper.getClassTargetList().createMissingTargets();
+          LOG.info("created {} of {} objects", count, mapper.getClassName());
         }
       }
       in.close();
 
       // pass 2:
+      LOG.info("Phase 2: update newley created objects and connect related objects.");
       in = new FileReader(fileName);
       records = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
       for (CSVRecord record : records) {

@@ -2,6 +2,7 @@ package com.objy.se;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.esotericsoftware.wildcard.Paths;
 
 import com.objy.db.Connection;
 import com.objy.db.Objy;
@@ -36,13 +37,17 @@ public class IngestCSV {
     public String bootFile = null;
     @Parameter(names = "-csvfile", description = "Name of the CSV file to ingest.")
     public String csvFile = null;
+    @Parameter(names = "-csvfiles", description = "Quoted Pattern of the CSV files to ingest.")
+    public String csvFiles = null;
     @Parameter(names = "-mapper", description = "Name of the JSON mapper file.")
     public String mapperFile = null;
+    @Parameter(names = "-commitEvery", description = "Number of record ingested for each commit.")
+    public Integer commitEvery = 20000;
   };
 
   private static _Params _params = new _Params();
 
-  private void ingest(String csvFile, String mapperFile) {
+  private void ingest(String csvFile, String mapperFile, int commitEvery) {
     JsonElement jsonMapper = null;
     // read the mapper file as JSON and convert it to a Mapper object
     try {
@@ -56,6 +61,7 @@ public class IngestCSV {
     
     try {
       Transaction tx = new Transaction(TransactionMode.READ_UPDATE, "spark_write");
+      long timeStart = System.currentTimeMillis();
       // schemaManager need to be initialized within a transaction to cahce 
       // meta data information.
       String fileName = csvFile;
@@ -88,6 +94,9 @@ public class IngestCSV {
 
       Transaction.getCurrent().commit();
       Transaction.getCurrent().close();
+      long timeDiff = System.currentTimeMillis() - timeStart;
+      LOG.info("Time: {} sec", (timeDiff/1000.0));
+      
     } catch (Exception ex) {
       ex.printStackTrace();
     }
@@ -168,9 +177,24 @@ public class IngestCSV {
     // some intialization for Thingspan.
     new Connection(_params.bootFile);
     Objy.enableConfiguration();
-
-    ingester.ingest(_params.csvFile, _params.mapperFile);
-
+    if (_params.csvFile != null)
+    {
+      ingester.ingest(_params.csvFile, _params.mapperFile, _params.commitEvery);
+    }
+    else if (_params.csvFiles != null)
+    {
+      Paths paths = new Paths();
+      paths.glob(null, _params.csvFiles);
+      int count = 1;
+      int totalCount = paths.getPaths().size();
+      for(String csvFile : paths.getPaths())
+      {
+        LOG.info("Processing File: {}", csvFile);
+        ingester.ingest(csvFile, _params.mapperFile, _params.commitEvery);
+        LOG.info("Processed {} of {}", count, totalCount);
+        count++;
+      }
+    }
   }
 
   private static void processParams(String[] args) {
@@ -183,8 +207,8 @@ public class IngestCSV {
       commander.usage();
       System.exit(1);
     }
-    if (_params.csvFile == null) {
-      System.err.println("You must provide a CSV file to ingest");
+    if (_params.csvFile == null && _params.csvFiles == null) {
+      System.err.println("You must provide a CSV file or file pattern to ingest");
       commander.usage();
       System.exit(1);
     }

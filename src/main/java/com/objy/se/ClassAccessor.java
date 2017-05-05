@@ -11,17 +11,16 @@ package com.objy.se;
  */
 import com.objy.data.Attribute;
 import com.objy.data.Instance;
+import com.objy.data.List;
 import com.objy.data.LogicalType;
 import com.objy.data.Reference;
 import com.objy.data.Variable;
+import com.objy.db.ObjectId;
 import com.objy.se.utils.Property;
 import com.objy.se.utils.Relationship;
-import com.objy.se.utils.TargetKey;
 import com.objy.se.utils.TargetList;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import org.apache.commons.csv.CSVRecord;
 
@@ -34,7 +33,6 @@ public class ClassAccessor {
   protected com.objy.data.Class classRef = null;
   protected String className = null;
   
-  //protected static ArrayList<String> attributeList = new ArrayList<>();
   protected HashMap<String, Attribute> attributeMap = new HashMap<>();
   private IngestMapper mapper = null;
   
@@ -191,7 +189,9 @@ public class ClassAccessor {
       instance.getAttributeValue(attribute, varValue);
 
       if (attribute.getAttributeValueSpecification().getLogicalType() == LogicalType.LIST) {
-          varValue.listValue().add(new Variable(new Reference(value)));
+        List list = varValue.listValue();
+        if (!doListContainReference(list, value))
+          list.add(new Variable(new Reference(value)));
       } else if (attribute.getAttributeValueSpecification().getLogicalType() == LogicalType.REFERENCE) {
           varValue.set(new Reference(value));
       } else {
@@ -214,6 +214,22 @@ public class ClassAccessor {
 
   void setMapper(IngestMapper mapper) {
     this.mapper = mapper;
+  }
+
+  private boolean doListContainReference(List list, Instance value) {
+    Variable var = new Variable();
+    long valueOid = value.getObjectId().asLong();
+    for (int i = 0; i < list.size(); i++)
+    {
+      list.get(i, var);
+      long refOid = var.referenceValue().getObjectId().asLong();
+      if (refOid == valueOid)
+      {
+        return true;
+      }
+    }
+    
+    return false;
   }
 }
 

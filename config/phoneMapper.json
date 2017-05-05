@@ -8,6 +8,7 @@
 	"Relationships": [
 							{ "RelationshipName" : "owner",
 								"ToClass"          : "Person",
+                "ToClassRelationshipName": "owns",
 								"Key" : [
 									{ "SchemaName": "id",  "RawName": "person_index" }
 								]

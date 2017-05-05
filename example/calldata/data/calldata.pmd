@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<PMD pmdSchemaVersion="1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/opt/Objectivity/12.4/etc/PMD.xsd">
+  <IndexTypesSnapshot>
+    <IndexType
+      name="Traditional"
+      description="Traditional Objectivity built-in index."
+      isOrdered="true"
+      duplicatesAreAllowed="true"
+      supportsRangeAccess="true">
+      <KeyCharacteristics
+        allAttributesAreRequired="false"
+        attributesAreOrdered="true"
+        minimumNumberOfAttributes="1" maximumNumberOfAttributes="0">
+        <SupportedAttributeTypes>
+          <Numeric/>
+          <String/>
+        </SupportedAttributeTypes>
+      </KeyCharacteristics>
+    </IndexType>
+  </IndexTypesSnapshot>
+  <SchemaSnapshot/>
+  <MainStorageGroup>
+    <StorageGroupConfiguration selection="Any"/>
+    <StorageAcquisitionPolicy waitSeconds="25" storageUnavailablePolicy="UseDefault"/>
+  </MainStorageGroup>
+  <PlacementModel
+    name="Application"
+    version="1" status="Current" id="29554876849848321">
+    <ChangeLog>
+      <ChangeLogItem user="ibrahim" timestamp="2017-01-05T14:19:35" logMessage="Created"/>
+    </ChangeLog>
+    <KeySpecifications/>
+    <IndexSpecifications/>
+    <DatabasePlacers/>
+    <ContainerPlacers>
+      <ContainerPlacer name="Default"
+        description="Default placer used for placing containers when no specific container placer is specified"
+        placeInto="OwnScope">
+        <Scope>
+          <SingleDatabaseGroup/>
+          <DatabaseGroupConfiguration selection="Any">
+            <DatabaseConfiguration
+              databasePageSize="8192"
+							fileSizeLimit="400000k"/>
+          </DatabaseGroupConfiguration>
+        </Scope>
+      </ContainerPlacer>
+      <ContainerPlacer name="CallDetailContainerPlacer"
+        description="Placer for CallDetail containers" placeInto="OwnScope">
+        <Scope>
+          <SingleDatabaseGroup />
+          <DatabaseGroupConfiguration selection="Any">
+            <DatabaseConfiguration
+              databasePageSize="0"
+							fileSizeLimit="200000k"/>
+          </DatabaseGroupConfiguration>
+        </Scope>
+      </ContainerPlacer>
+    </ContainerPlacers>
+    <ObjectPlacers>
+      <ObjectPlacer
+        name="Default"
+        description="Default placer used for placing objects when no specific object placer is specified"
+        placeInto="OwnScope"
+        placeOnNewPage="false"
+        containerPlacer="Default">
+        <Scope>
+          <SingleContainerGroup/>
+          <ContainerGroupConfiguration selection="Any">
+            <ContainerConfiguration
+              growByPolicy="PercentageOfCurrentSize" growBy="100"
+              initialNumberOfPages="100" pageLimit="20000"
+              placeInOwnFile="false"
+              maintainObjectCounts="true">
+							<ObjectCountLimit objectClass="Phone" objectLimit="20000" containerIsFullAtLimit="false"/>
+						</ContainerConfiguration>
+          </ContainerGroupConfiguration>
+        </Scope>
+      </ObjectPlacer>
+      <ObjectPlacer name="CallDetailObjectPlacer"
+        description="Places CallDetail objects in it's own databases" placeInto="OwnScope"
+        placeOnNewPage="false"
+        containerPlacer="CallDetailContainerPlacer">
+        <Scope>
+          <SingleContainerGroup />
+          <ContainerGroupConfiguration selection="Any">
+            <ContainerConfiguration 
+							growByPolicy="PercentageOfCurrentSize" growBy="100" 
+							initialNumberOfPages="100" pageLimit="20000"
+              placeInOwnFile="false" 
+							maintainObjectCounts="true">
+              <ObjectCountLimit objectClass="CallDetail" objectLimit="0" containerIsFullAtLimit="false" />
+            </ContainerConfiguration>
+          </ContainerGroupConfiguration>
+        </Scope>
+      </ObjectPlacer>
+
+    </ObjectPlacers>
+    <Rules>
+      <Rule objectClass="CallDetail" objectPlacer="CallDetailObjectPlacer" />
+  	</Rules>
+  </PlacementModel>
+</PMD>

@@ -1,0 +1,13 @@
+{
+	"ClassName": "CallDetail",
+  "Integers": [{"SchemaName": "duration", "RawName": "call_duration"}],
+  "Dates"   : [{"SchemaName": "callDate", "RawName": "call_time"}],
+  "Relationships": [
+              { "RelationshipName"       : "call", 
+                "ToClass"                : "Call",
+                "ToClassRelationshipName": "callDetails",
+                "Key" : [{ "SchemaName": "callerNumber", "RawName": "phone1" },
+                         { "SchemaName": "calleeNumber", "RawName": "phone2" }]
+              }]
+}
+

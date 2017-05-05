@@ -1,0 +1,49 @@
+[
+{
+	"ClassName": "Phone",
+  "ClassKey" : [
+     {"SchemaName": "phoneNumber", "RawName": "phone1" }
+          ],
+	"Strings" : [{"SchemaName": "phoneNumber", "RawName": "phone1"},
+               {"SchemaName": "areaCode", "RawName": "ph1_area_code"},
+               {"SchemaName": "IMSI", "RawName": "ph1_imsi"},
+               {"SchemaName": "IMEI", "RawName": "ph1_imei"}],
+  "Relationships": [
+              { "RelationshipName"       : "callees", 
+                "ToClass"                : "Call",
+                "ToClassRelationshipName": "callee",
+                "Key" : [{ "SchemaName": "callerNumber", "RawName": "phone2" },
+                         { "SchemaName": "calleeNumber", "RawName": "phone1" }]
+              }]
+},
+{
+	"ClassName": "Phone",
+  "ClassKey" : [
+     {"SchemaName": "phoneNumber", "RawName": "phone2" }
+          ],
+	"Strings" : [{"SchemaName": "phoneNumber", "RawName": "phone2"},
+               {"SchemaName": "areaCode", "RawName": "ph2_area_code"},
+               {"SchemaName": "IMSI", "RawName": "ph2_imsi"},
+               {"SchemaName": "IMEI", "RawName": "ph2_imei"}],
+  "Relationships": [
+              { "RelationshipName"       : "callers", 
+                "ToClass"                : "Call",
+                "ToClassRelationshipName": "caller",
+                "Key" : [{ "SchemaName": "callerNumber", "RawName": "phone2" },
+                         { "SchemaName": "calleeNumber", "RawName": "phone1" }]
+              }]
+},
+{
+	"ClassName": "CallDetail",
+  "Integers": [{"SchemaName": "duration", "RawName": "call_duration"}],
+  "Dates"   : [{"SchemaName": "callDate", "RawName": "call_time"}],
+  "Relationships": [
+              { "RelationshipName"       : "call", 
+                "ToClass"                : "Call",
+                "ToClassRelationshipName": "callDetails",
+                "Key" : [{ "SchemaName": "callerNumber", "RawName": "phone2" },
+                         { "SchemaName": "calleeNumber", "RawName": "phone1" }]
+              }]
+}
+]
+

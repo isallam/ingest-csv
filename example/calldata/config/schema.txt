@@ -1,0 +1,26 @@
+UPDATE SCHEMA
+{
+    CREATE CLASS Phone
+    {
+            phoneNumber:    String,
+            areaCode:       String,
+            IMSI:           String,
+            IMEI:           String,
+            callers:        List {Element: Reference{Referenced: Call}, CollectionName: SegmentedArray},
+            callees:        List {Element: Reference{Referenced: Call}, CollectionName: SegmentedArray}
+    }
+    CREATE CLASS Call
+    {
+            callerNumber:   String,
+            calleeNumber:   String,
+            caller:         Reference {Referenced: Phone},
+            callee:         Reference {Referenced: Phone},
+            callDetails:    List {Element: Reference{Referenced: CallDetail}, CollectionName: SegmentedArray}
+    }
+    CREATE CLASS CallDetail
+    {
+            duration:       Integer {Encoding: Unsigned},
+            callDate:       Date,
+            call:           Reference {Referenced: Call}
+    }
+};

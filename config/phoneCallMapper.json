@@ -1,9 +1,9 @@
 {
 	"ClassName": "PhoneCall",
-	"Integers": [{"SchemaName": "call_duration", "RawName": "call_duration"}],
-	"Strings" : [{"SchemaName": "from_number",   "RawName": "from_number"}, 
-               {"SchemaName": "to_number",     "RawName": "to_number"}],
-  "Dates"   : [{"SchemaName": "call_time",     "RawName": "call_time"}],
+	"Attributes": [{"SchemaName": "call_duration", "RawName": "call_duration"},
+	               {"SchemaName": "from_number",   "RawName": "from_number"}, 
+                 {"SchemaName": "to_number",     "RawName": "to_number"},
+                 {"SchemaName": "call_time",     "RawName": "call_time"}],
 	"Relationships": [
               {"RelationshipName" : "from_phone",
                "ToClass"          : "Phone",

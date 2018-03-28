@@ -3,8 +3,8 @@
   "ClassKey" : [
      {"SchemaName": "id", "RawName": "index" }
           ],
-	"Integers": [{"SchemaName": "id",           "RawName": "index"}], 
-	"Strings" : [{"SchemaName": "phone_number", "RawName": "phone_number"}],
+	"Attributes": [{"SchemaName": "id",           "RawName": "index"}, 
+	               {"SchemaName": "phone_number", "RawName": "phone_number"}],
 	"Relationships": [
 							{ "RelationshipName" : "owner",
 								"ToClass"          : "Person",

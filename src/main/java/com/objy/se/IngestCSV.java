@@ -37,17 +37,20 @@ public class IngestCSV {
     public String bootFile = null;
     @Parameter(names = "-csvfile", description = "Name of the CSV file to ingest.")
     public String csvFile = null;
-    @Parameter(names = "-csvfiles", description = "Quoted Pattern of the CSV files to ingest.")
+    @Parameter(names = "-csvFiles", description = "Quoted Pattern of the CSV files to ingest.")
     public String csvFiles = null;
     @Parameter(names = "-mapper", description = "Name of the JSON mapper file.")
     public String mapperFile = null;
+    @Parameter(names = "-isTabDelim", description = "File use Tab delimited fields")
+    public Boolean isTabDelim = false;
     @Parameter(names = "-commitEvery", description = "Number of record ingested for each commit.")
     public Integer commitEvery = 20000;
   };
 
   private static _Params _params = new _Params();
 
-  private void ingest(String csvFile, String mapperFile, int commitEvery) {
+  private void ingest(String csvFile, String mapperFile, int commitEvery, 
+          boolean isTabDelim) {
     JsonElement jsonMapper = null;
     // read the mapper file as JSON and convert it to a Mapper object
     try {
@@ -72,7 +75,7 @@ public class IngestCSV {
           for (JsonElement jsonElement : jsonMapperArray)
           {
             IngestMapper mapper = new IngestMapper((JsonObject) jsonElement);
-            int objCount = processFile(fileName, mapper);
+            int objCount = processFile(fileName, mapper, isTabDelim);
             // for now we read and process the whole file before commiting, but we
             // might change that to iterate and commit as needed.
             checkpoint(tx);
@@ -83,7 +86,7 @@ public class IngestCSV {
         {
             JsonObject jsonObject = (JsonObject) jsonMapper;
             IngestMapper mapper = new IngestMapper(jsonObject);
-            int objCount = processFile(fileName, mapper);
+            int objCount = processFile(fileName, mapper, isTabDelim);
             // for now we read and process the whole file before commiting, but we
             // might change that to iterate and commit as needed.
             checkpoint(tx);
@@ -107,7 +110,7 @@ public class IngestCSV {
     tx.start(TransactionMode.READ_UPDATE);
   }
 
-  private int processFile(String fileName, IngestMapper mapper) {
+  private int processFile(String fileName, IngestMapper mapper, boolean isTabDelim) {
     LOG.info("Starting Ingest for: {}: ", fileName);
 
     ClassAccessor classProxy = SchemaManager.getInstance().getClassProxy(mapper.getClassName());
@@ -119,7 +122,12 @@ public class IngestCSV {
       // pass 1: process the keys and related types from the file and cache oids.
       in = new FileReader(fileName);
       // parse the file and pick the keys needed.
-      records = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
+      if (isTabDelim) {
+        records = CSVFormat.TDF.withFirstRecordAsHeader().parse(in);
+      }
+      else {
+        records = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
+      }
       boolean doProcessForRelationships = mapper.hasRelationships();
       boolean doProcessClassKeys = mapper.hasClassKey();
       if (doProcessClassKeys || doProcessForRelationships) {
@@ -179,7 +187,8 @@ public class IngestCSV {
     Objy.enableConfiguration();
     if (_params.csvFile != null)
     {
-      ingester.ingest(_params.csvFile, _params.mapperFile, _params.commitEvery);
+      ingester.ingest(_params.csvFile, _params.mapperFile, 
+              _params.commitEvery, _params.isTabDelim);
     }
     else if (_params.csvFiles != null)
     {
@@ -190,7 +199,8 @@ public class IngestCSV {
       for(String csvFile : paths.getPaths())
       {
         LOG.info("Processing File: {}", csvFile);
-        ingester.ingest(csvFile, _params.mapperFile, _params.commitEvery);
+        ingester.ingest(csvFile, _params.mapperFile, 
+                _params.commitEvery, _params.isTabDelim);
         LOG.info("Processed {} of {}", count, totalCount);
         count++;
       }
@@ -198,7 +208,7 @@ public class IngestCSV {
   }
 
   private static void processParams(String[] args) {
-    System.out.println("args:" + args[0] + "," + args[1]);
+    //System.out.println("args:" + args[0] + "," + args[1]);
     JCommander commander = new JCommander(_params, args);
     commander.setProgramName("IngestCSV");
 

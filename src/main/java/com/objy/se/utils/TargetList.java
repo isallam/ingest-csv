@@ -6,6 +6,7 @@
 package com.objy.se.utils;
 
 import com.objy.data.Instance;
+import com.objy.data.LogicalType;
 import com.objy.data.Variable;
 import com.objy.targetFinder.ObjectTarget;
 import com.objy.targetFinder.ObjectTargetKey;
@@ -73,9 +74,11 @@ public class TargetList {
                         SingleKey... singleKeywords) {
     Property[] nameValues = new Property[singleKeywords.length];
     for (int i = 0; i < singleKeywords.length; i++) {
+      String value = record.get(singleKeywords[i].rawFileAttrName);
+      Variable var = targetClass.getCorrectValue(value, singleKeywords[i].logicalType);
       nameValues[i] = new Property(
             singleKeywords[i].attrName, 
-            singleKeywords[i].getCorrectValue(record));
+            var);
     }
     addToTargetInfoMap(nameValues);
   }  
@@ -108,12 +111,14 @@ public class TargetList {
   private Instance getTargetObjectForKyes(CSVRecord record, 
                         SingleKey... keys) {
 //    Object[] values = new Property[keys.length];
-    List<Object> values = new ArrayList<>();
+    List<Variable> values = new ArrayList<>();
     for (SingleKey key : keys) {
       //values[i] = record.get(key.rawFileAttrName);
-      values.add(key.getCorrectValue(record));
+      String value = record.get(key.rawFileAttrName);
+      Variable var = targetClass.getCorrectValue(value, key.logicalType);
+      values.add(targetClass.getCorrectValue(value, key.logicalType));
     }
-    return getTargetObject(values.toArray());
+    return getTargetObject(values);
   }  
   
   private static long hashOfValues(Property...  nameValues) {
@@ -124,15 +129,15 @@ public class TargetList {
     return value.hashCode();
   }
   
-  private static long hash(Object...  values) {
+  private static long hash(List<Variable> values) {
     String value = "";
-    for (Object obj : values) {
+    for (Variable obj : values) {
       value += obj.toString();
     }
     return value.hashCode();
   }
 
-  private Instance getTargetObject(Object... values)
+  private Instance getTargetObject(List<Variable> values)
   {
     long hashValue = hash(values);
     Instance instance = null;

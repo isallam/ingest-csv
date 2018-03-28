@@ -5,6 +5,8 @@
  */
 package com.objy.se.utils;
 
+import com.objy.data.Variable;
+
 /**
  * Class to store information about and attribute name and value.
  *
@@ -12,9 +14,9 @@ package com.objy.se.utils;
  */
 public class Property {
   String attrName;
-  Object attrValue;
+  Variable attrValue;
 
-  Property(String name, Object value) {
+  Property(String name, Variable value) {
     attrName = name;
     attrValue = value;
   }
@@ -23,7 +25,7 @@ public class Property {
     return attrName;
   }
   
-  public Object getValue() {
+  public Variable getValue() {
     return attrValue;
   }
 }

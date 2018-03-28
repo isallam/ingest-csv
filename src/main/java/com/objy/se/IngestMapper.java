@@ -8,7 +8,6 @@ package com.objy.se;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.objy.data.Attribute;
 import com.objy.se.utils.CompositeKey;
 import com.objy.se.utils.Relationship;
 import com.objy.se.utils.SingleKey;
@@ -58,10 +57,7 @@ import org.slf4j.LoggerFactory;
 class IngestMapper {
   private static String ClassNameJSON = "ClassName"; 
   private static String ClassKeyJSON = "ClassKey";
-  private static String StringsJSON = "Strings"; 
-  private static String FloatsJSON = "Floats"; 
-  private static String IntegersJSON = "Integers"; 
-  private static String DatesJSON = "Dates"; 
+  private static String AttributesJSON = "Attributes"; 
   private static String RelationshipsJSON = "Relationships"; 
   private static String SchemaNameJSON = "SchemaName";
   private static String RawNameJSON = "RawName";
@@ -74,11 +70,8 @@ class IngestMapper {
   private TargetKey classKey = null;
   private TargetList classTargetList = null;
   
-  // map schema attribute names to raw data name
-  protected HashMap<String, String> integerAttributeMap = new HashMap<>();
-  protected HashMap<String, String> floatAttributeMap = new HashMap<>();
-  protected HashMap<String, String> stringAttributeMap = new HashMap<>();
-  protected HashMap<String, String> dateAttributeMap = new HashMap<>();
+  // map schema attribute names to raw data column name
+  protected HashMap<String, String> attributesMap = new HashMap<>();
   
   protected List<Relationship> relationshipList = new ArrayList<>();
   
@@ -98,26 +91,11 @@ class IngestMapper {
       processClassKey(jsonArray);
     }
     
-    if (json.has(StringsJSON)) {
-      JsonArray jsonArray = json.get(StringsJSON).getAsJsonArray();
-      processArray(jsonArray, stringAttributeMap);
+    if (json.has(AttributesJSON)) {
+      JsonArray jsonArray = json.get(AttributesJSON).getAsJsonArray();
+      processArray(jsonArray, attributesMap);
     }
-    
-    if (json.has(IntegersJSON)) {
-      JsonArray jsonArray = json.get(IntegersJSON).getAsJsonArray();
-      processArray(jsonArray, integerAttributeMap);
-    }
-    
-    if (json.has(FloatsJSON)) {
-      JsonArray jsonArray = json.get(FloatsJSON).getAsJsonArray();
-      processArray(jsonArray, floatAttributeMap);
-    }
-
-    if (json.has(DatesJSON)) {
-      JsonArray jsonArray = json.get(DatesJSON).getAsJsonArray();
-      processArray(jsonArray, dateAttributeMap);
-    }
-    
+        
     if (json.has(RelationshipsJSON)) {
       JsonArray jsonArray = json.get(RelationshipsJSON).getAsJsonArray();
       processRelationships(jsonArray);
@@ -161,10 +139,9 @@ class IngestMapper {
           String keySchemaName = keyObj.get(SchemaNameJSON).getAsString();
           String keyRawName = keyObj.get(RawNameJSON).getAsString();
           // get the type of the keySchemaName 
-          Attribute attr = getAttribute(keySchemaName, classAccessor);
-          
+          ClassAccessor.AttributeInfo attrInfo = classAccessor.getAttribute(keySchemaName);
           SingleKey key = new SingleKey(keySchemaName, keyRawName, 
-                  attr.getAttributeValueSpecification().getLogicalType());
+                  attrInfo.logicalType());
           singleKeys.add(key);
         }
         classKey = new CompositeKey(singleKeys.toArray(new SingleKey[0]));
@@ -174,9 +151,9 @@ class IngestMapper {
         String keySchemaName = keyObj.get(SchemaNameJSON).getAsString();
         String keyRawName = keyObj.get(RawNameJSON).getAsString();
         // get the type of the keySchemaName 
-        Attribute attr = getAttribute(keySchemaName, classAccessor);
+        ClassAccessor.AttributeInfo attrInfo = classAccessor.getAttribute(keySchemaName);
        classKey = new SingleKey(keySchemaName, keyRawName,
-                  attr.getAttributeValueSpecification().getLogicalType());
+                  attrInfo.logicalType());
       }
     }
   
@@ -210,9 +187,9 @@ class IngestMapper {
           String keySchemaName = keyObj.get(SchemaNameJSON).getAsString();
           String keyRawName = keyObj.get(RawNameJSON).getAsString();
           // get the type of the keySchemaName 
-          Attribute attr = getAttribute(keySchemaName, toClassAccessor);
+          ClassAccessor.AttributeInfo attrInfo = toClassAccessor.getAttribute(keySchemaName);
           SingleKey key = new SingleKey(keySchemaName, keyRawName, 
-                  attr.getAttributeValueSpecification().getLogicalType());
+                  attrInfo.logicalType());
           singleKeys.add(key);
         }
         CompositeKey compositeKey = new CompositeKey(singleKeys.toArray(new SingleKey[0]));
@@ -223,9 +200,9 @@ class IngestMapper {
         String keySchemaName = keyObj.get(SchemaNameJSON).getAsString();
         String keyRawName = keyObj.get(RawNameJSON).getAsString();
         // get the type of the keySchemaName 
-        Attribute attr = getAttribute(keySchemaName, toClassAccessor);
+        ClassAccessor.AttributeInfo attrInfo = toClassAccessor.getAttribute(keySchemaName);
         SingleKey key = new SingleKey(keySchemaName, keyRawName,
-                  attr.getAttributeValueSpecification().getLogicalType());
+                  attrInfo.logicalType());
         rel.add(key, relationshipName, toClassRelationshipName);
       }
       relationshipList.add(rel);
@@ -233,35 +210,15 @@ class IngestMapper {
 
   }
   
-  protected HashMap<String, String> getStringsMap() {
-    return this.stringAttributeMap;
+  protected HashMap<String, String> getAttributesMap() {
+    return this.attributesMap;
   }
 
-  protected HashMap<String, String>  getFloatMap() {
-    return this.floatAttributeMap;
-  }
-
-  protected HashMap<String, String>  getIntegersMap() {
-    return this.integerAttributeMap;
-  }
-  
-  protected HashMap<String, String>  getDatesMap() {
-    return this.dateAttributeMap;
-  }
 
   protected List<Relationship> getRelationshipList() {
     return relationshipList;
   }
 
-  private Attribute getAttribute(String keySchemaName, ClassAccessor classAccessor) {
-    Attribute attr = classAccessor.getAttribute(keySchemaName);
-    if (attr == null)
-    {
-      LOG.error("Attribute: {} for Class: {} is null", keySchemaName, className);
-      throw new IllegalStateException("Invalid configuration... check mapper vs. schema");
-    }
-    return attr;
-  }
 
   public boolean hasRelationships() {
     return (!getRelationshipList().isEmpty());

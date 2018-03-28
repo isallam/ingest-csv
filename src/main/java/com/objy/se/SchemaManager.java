@@ -30,7 +30,6 @@ public class SchemaManager {
     
     if (!classProxyMap.containsKey(className)) {
       classAccessor = new ClassAccessor(className);
-      classAccessor.init();
       classProxyMap.put(className, classAccessor);
     }
     

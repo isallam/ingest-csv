@@ -19,7 +19,7 @@ public class SingleKey implements TargetKey {
   // the hash of both IDReference + IDType
   //----------------------------------------------------------------------s---
     protected String attrName;
-    private String rawFileAttrName;
+    protected String rawFileAttrName;
     protected LogicalType logicalType;
     
     public SingleKey(String attrName, String rawFileAttrName,
@@ -34,22 +34,22 @@ public class SingleKey implements TargetKey {
               ", logicalType: " + logicalType.toString();
     }
 
-  Object getCorrectValue(CSVRecord record) {
-    if (logicalType == LogicalType.INTEGER) {
-      long attrValue = 0;
-      String attrValueStr = record.get(rawFileAttrName);
-      if (!attrValueStr.equals(""))
-        attrValue = Long.parseLong(attrValueStr);
-      return attrValue;
-    }
-    if (logicalType == LogicalType.REAL) {
-      double attrValue = 0;
-      String attrValueStr = record.get(rawFileAttrName);
-      if (!attrValueStr.equals(""))
-        attrValue = Double.parseDouble(attrValueStr);
-      return attrValue;
-    }
-    else 
-      return record.get(rawFileAttrName);
-  }
+//  Object getCorrectValue(CSVRecord record) {
+//    if (logicalType == LogicalType.INTEGER) {
+//      long attrValue = 0;
+//      String attrValueStr = record.get(rawFileAttrName);
+//      if (!attrValueStr.equals(""))
+//        attrValue = Long.parseLong(attrValueStr);
+//      return attrValue;
+//    }
+//    if (logicalType == LogicalType.REAL) {
+//      double attrValue = 0;
+//      String attrValueStr = record.get(rawFileAttrName);
+//      if (!attrValueStr.equals(""))
+//        attrValue = Double.parseDouble(attrValueStr);
+//      return attrValue;
+//    }
+//    else 
+//      return record.get(rawFileAttrName);
+//  }
 }

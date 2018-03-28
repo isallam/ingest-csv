@@ -15,14 +15,20 @@ import com.objy.data.List;
 import com.objy.data.LogicalType;
 import com.objy.data.Reference;
 import com.objy.data.Variable;
-import com.objy.db.ObjectId;
 import com.objy.se.utils.Property;
 import com.objy.se.utils.Relationship;
 import com.objy.se.utils.TargetList;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
 import org.apache.commons.csv.CSVRecord;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -30,11 +36,25 @@ import org.apache.commons.csv.CSVRecord;
  */
 public class ClassAccessor {
 
+  private static final Logger LOG = LoggerFactory.getLogger(ClassAccessor.class.getName());
+  
+  class AttributeInfo {
+    private Attribute   _attribute;
+    private LogicalType _logicalType;
+    public AttributeInfo(Attribute attr, LogicalType logicalType) {
+      _attribute = attr;
+      _logicalType = logicalType;
+    }
+    public Attribute attribute() { return _attribute; }
+    public LogicalType logicalType() { return _logicalType; }
+  }
+  
   protected com.objy.data.Class classRef = null;
   protected String className = null;
   
-  protected HashMap<String, Attribute> attributeMap = new HashMap<>();
+  protected HashMap<String, AttributeInfo> attributeMap = new HashMap<>();
   private IngestMapper mapper = null;
+  private boolean isInitialized = false;
   
   public ClassAccessor(String className)
   {
@@ -42,15 +62,18 @@ public class ClassAccessor {
   }
   
  
-  public void init() {
+  private void init() {
     classRef = com.objy.data.Class.lookupClass(this.className);
     Iterator<Variable> attrItr = classRef.getAttributes().iterator();
     Attribute attr = null;
     while (attrItr.hasNext()) {
       attr = attrItr.next().attributeValue();
       //Attribute attr = classRef.lookupAttribute(attrName);
-      attributeMap.put(attr.getName(), attr);
+      AttributeInfo attributeInfo = new AttributeInfo(attr, 
+                attr.getAttributeValueSpecification().getLogicalType());
+      attributeMap.put(attr.getName(), attributeInfo);
     }
+    isInitialized = true;
   }
 
   public String getClassName() {
@@ -59,11 +82,23 @@ public class ClassAccessor {
   
 
   public com.objy.data.Class getObjyClass() {
+    if (!isInitialized)
+    {
+      init();
+    }
     return classRef;
   }
       
-  public Attribute getAttribute(String attrName) {
-    return attributeMap.get(attrName);
+  public AttributeInfo getAttribute(String attrName) {
+    if (!isInitialized)
+      init();
+    AttributeInfo attrInfo = attributeMap.get(attrName);
+    if (attrInfo == null)
+    {
+      LOG.error("Attribute: {} for Class: {} is null", attrName, className);
+      throw new IllegalStateException("Invalid configuration... check mapper vs. schema");
+    }
+    return attrInfo;
   }
   
   private Instance createInstance() {
@@ -123,44 +158,123 @@ public class ClassAccessor {
     return instance;
   }
   
+  
+  
+  public Variable getCorrectValue(String strValue, LogicalType logicalType) {
+    Variable retValue = null;
+    switch (logicalType) {
+      case INTEGER: {
+        long attrValue = 0;
+        try {
+          if (!strValue.equals("")) {
+            attrValue = Long.parseLong(strValue);
+          }
+        } catch (NumberFormatException nfEx) {
+//        System.out.println("... entry: " + entry.getValue() + " for raw: " + entry.getKey());
+          nfEx.printStackTrace();
+          throw nfEx;
+        }
+        retValue.set(attrValue);
+      }
+      break;
+      case REAL: 
+        {
+          double attrValue = 0;
+          try {
+            if (!strValue.equals("")) {
+              attrValue = Double.parseDouble(strValue);
+            }
+          } catch (NumberFormatException nfEx) {
+  //        System.out.println("... entry: " + entry.getValue() + " for raw: " + entry.getKey());
+            nfEx.printStackTrace();
+            throw nfEx;
+          }
+          retValue.set(attrValue);
+        }
+        break;
+      case STRING:
+        retValue.set(strValue);
+        break;
+      case BOOLEAN:
+        {
+          if (strValue.equalsIgnoreCase("TRUE") || strValue.equals("1")) {
+            retValue.set(true);
+          }
+          else if (strValue.equalsIgnoreCase("FALSE") || strValue.equals("0")) {
+            retValue.set(false);
+          }
+          else {
+            LOG.error("Expected Boolean value but got: {}", strValue);
+            throw new IllegalStateException("Possible invalid configuration... check mapper vs. schema" +
+                    "... or check records for invalid values");
+          }
+        }
+        break;
+
+      case CHARACTER:
+        {
+          if (strValue.length() == 1) {
+            retValue.set(strValue.charAt(0));
+          }
+          else { /* not a char value... report that */
+            LOG.error("Expected Character value but got: {}", strValue);
+            throw new IllegalStateException("Possible invalid configuration... check mapper vs. schema" +
+                    "... or check records for invalid values");
+          }
+        }
+        break;
+      case DATE:
+        {
+          try {
+            Date date = DateFormat.getDateInstance().parse(strValue);
+            retValue.set(date);
+          } catch (ParseException ex) {
+            LOG.error(ex.toString());
+            throw new IllegalStateException("Possible invalid configuration... check mapper vs. schema" +
+                     "... or check records for invalid values");
+          }
+        }
+        break;
+      case DATE_TIME:
+        {
+          try {
+            Date date = DateFormat.getDateTimeInstance().parse(strValue);
+            retValue.set(date);
+          } catch (ParseException ex) {
+            LOG.error(ex.toString());
+            throw new IllegalStateException("Possible invalid configuration... check mapper vs. schema" +
+                     "... or check records for invalid values");
+          }
+        }
+        break;
+      case TIME:
+        {
+          try {
+            Date date = DateFormat.getTimeInstance().parse(strValue);
+            retValue.set(date);
+          } catch (ParseException ex) {
+            LOG.error(ex.toString());
+            throw new IllegalStateException("Possible invalid configuration... check mapper vs. schema" +
+                     "... or check records for invalid values");
+          }
+        }
+      default:
+      {
+        throw new UnsupportedOperationException("LogicalType: " + logicalType + " is not supported!!!");
+      }
+    }
+    return retValue;
+  }
+    
   public Instance setAttributes(Instance instance, CSVRecord record) {
     
   
-  // iterate and create any Integer attribute
-    for (Map.Entry<String, String> entry : mapper.getIntegersMap().entrySet())
+  // iterate and create attributes
+    for (Map.Entry<String, String> entry : mapper.getAttributesMap().entrySet())
     {
 //      System.out.println("Entry()" + entry.toString());
-      try {
-        long attrValue = 0;
-        String attrValueStr = record.get(entry.getValue());
-        if (!attrValueStr.equals(""))
-          attrValue = Long.parseLong(attrValueStr);
+        String attrValue = record.get(entry.getValue());
         setAttributeValue(instance, entry.getKey(), attrValue);
-      } catch (NumberFormatException nfEx) {
-//        System.out.println("... entry: " + entry.getValue() + " for raw: " + entry.getKey());
-        nfEx.printStackTrace();
-        throw nfEx;
-      }
-    }
-    
-    // iterate and create any Real atttribute
-    for (Map.Entry<String, String> entry : mapper.getFloatMap().entrySet())
-    {
-//      System.out.println("Entry()" + entry.toString());
-      try {
-        double attrValue = Double.parseDouble(record.get(entry.getValue()));
-        setAttributeValue(instance, entry.getKey(), attrValue);
-      } catch (NumberFormatException nfEx) {
-        nfEx.printStackTrace();
-        throw nfEx;
-      }
-    }
-    
-    // iterate and create any string attribute
-    for (Map.Entry<String, String> entry : mapper.getStringsMap().entrySet())
-    {
-//      System.out.println("Entry()" + entry.toString());
-      setAttributeValue(instance, entry.getKey(), record.get(entry.getValue()));
     }
     
     return instance;
@@ -174,7 +288,7 @@ public class ClassAccessor {
 
   public void setAttributeValue(Instance instance, String attributeName, Object value) {
     try {
-      Attribute attribute = attributeMap.get(attributeName);
+      Attribute attribute = attributeMap.get(attributeName).attribute();
       setAttributeValue(instance, attribute, value);
     } catch (Exception ex) {
       System.out.println("Error for : " + instance.getClass(true).getName() +  
@@ -200,7 +314,7 @@ public class ClassAccessor {
   }
 
   public void setReference(Instance instance, String attributeName, Instance value) {
-      Attribute attribute = attributeMap.get(attributeName);
+      Attribute attribute = attributeMap.get(attributeName).attribute();
       if (instance == null || value == null || attribute == null)
         System.out.println("For attr: " + attributeName + " - instance/attribute/value: " + 
                 instance + " / " + attribute + " / " + value );
@@ -208,7 +322,7 @@ public class ClassAccessor {
   }
   
   public void addReference(Instance instance, String attributeName, Instance value) {
-      Attribute attribute = attributeMap.get(attributeName);
+      Attribute attribute = attributeMap.get(attributeName).attribute();
       setReference(instance, attribute, value);
   }
 

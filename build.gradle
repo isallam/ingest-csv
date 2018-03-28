@@ -6,8 +6,8 @@ sourceCompatibility = '1.8'
 
 ext{
     projectPath    =   projectDir.getAbsolutePath()
-    objyVersion    =   project.hasProperty("objyVersion")  ? project.getProperty('objyVersion')  : "12.4.0"
-    thingspanhome  =   project.hasProperty("thingspanhome")? project.getProperty('thingspanhome'): '/opt' + File.separator + 'ThingSpan' + File.separator + '15.4'
+    objyVersion    =   project.hasProperty("objyVersion")  ? project.getProperty('objyVersion')  : "12.6.1"
+    thingspanhome  =   project.hasProperty("thingspanhome")? project.getProperty('thingspanhome'): '/opt' + File.separator + 'ThingSpan' + File.separator + '15.6'
     fdname         =   project.hasProperty('fdname')       ? project.getProperty('fdname')       : 'testfd'
     fddirhost      =   project.hasProperty('fddirhost')    ? project.getProperty('fddirhost')    : java.net.InetAddress.getLocalHost().getHostName();
     fddirpath      =   project.hasProperty('fddirpath')    ? project.getProperty('fddirpath')    : projectPath  + File.separator + 'data' + File.separator

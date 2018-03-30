@@ -17,8 +17,11 @@ import com.objy.se.utils.TargetList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -73,7 +76,7 @@ class IngestMapper {
   
   protected List<Relationship> relationshipList = new ArrayList<>();
   
-  private static final Logger LOG = LoggerFactory.getLogger(IngestMapper.class.getName());
+  private static final Logger LOG = Logger.getLogger(IngestMapper.class.getName());
   
   IngestMapper() {
     

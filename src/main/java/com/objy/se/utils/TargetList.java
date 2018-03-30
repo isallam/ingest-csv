@@ -6,7 +6,6 @@
 package com.objy.se.utils;
 
 import com.objy.data.Instance;
-import com.objy.data.LogicalType;
 import com.objy.data.Variable;
 import com.objy.targetFinder.ObjectTarget;
 import com.objy.targetFinder.ObjectTargetKey;
@@ -17,8 +16,10 @@ import java.util.ArrayList;
 import org.apache.commons.csv.CSVRecord;
 import java.util.HashMap;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -46,7 +47,7 @@ public class TargetList {
   protected ClassAccessor targetClass = null;
   protected TargetKey[] targetKeys = null;
   
-  private static final Logger LOG = LoggerFactory.getLogger(TargetList.class.getName());
+  private static final Logger LOG = Logger.getLogger(TargetList.class.getName());
   
   public TargetList(ClassAccessor targetClass, TargetKey... targetKeys) {
     this.targetClass = targetClass;
@@ -63,7 +64,7 @@ public class TargetList {
           addToTargetInfoMap(record, ((CompositeKey)key).keys);
         }
       } catch (Exception ex) {
-        LOG.error("Error for keywords: {}", key.toString()); 
+        LOG.log(Level.WARNING, "Error for keywords: {0}", key.toString()); 
         //ex.printStackTrace();
         throw ex;
       }
@@ -100,7 +101,7 @@ public class TargetList {
         instance = getTargetObjectForKyes(record, ((CompositeKey)key).keys);
       }
     } catch (Exception ex) {
-      LOG.error("Error for key(s): {}", key.toString()); 
+      LOG.log(Level.WARNING, "Error for key(s): {0}", key.toString()); 
       //ex.printStackTrace();
       throw ex;
     }
@@ -147,7 +148,7 @@ public class TargetList {
       instance = targetInfo.targetObject.getInstance();
     
     if (instance == null)
-      LOG.info("Ivalid instance for values: {}", values);
+      LOG.log(Level.WARNING, "Ivalid instance for values: {0}", values);
 
     return instance;
   }

@@ -27,13 +27,15 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 public class IngestCSV {
 
-  private static final Logger LOG = LoggerFactory.getLogger(IngestCSV.class.getName());
+  private static final Logger LOG = Logger.getLogger(IngestCSV.class.getName());
 
   private static class _Params {
 
@@ -74,9 +76,9 @@ public class IngestCSV {
       jsonMapper = parser.parse(jsonString);
       
     } catch (FileNotFoundException ex) {
-      LOG.error(ex.getMessage());
+      LOG.warning(ex.getMessage());
     } catch (IOException ioEx) {
-      LOG.error(ioEx.getMessage());
+      LOG.warning(ioEx.getMessage());
     }     
     try {
       Transaction tx = new Transaction(TransactionMode.READ_UPDATE, "spark_write");
@@ -95,7 +97,8 @@ public class IngestCSV {
             // for now we read and process the whole file before commiting, but we
             // might change that to iterate and commit as needed.
             checkpoint(tx);
-            LOG.info("Done {} Ingest... Total Objects: {}", fileName, objCount);
+            LOG.log(Level.WARNING, "Done {0} Ingest... Total Objects: {1}", 
+                    new Object[]{fileName, objCount});
           }   
         }
         else 
@@ -106,14 +109,15 @@ public class IngestCSV {
             // for now we read and process the whole file before commiting, but we
             // might change that to iterate and commit as needed.
             checkpoint(tx);
-            LOG.info("Done {} Ingest... Total Objects: {}", fileName, objCount);
+            LOG.log(Level.WARNING, "Done {0} Ingest... Total Objects: {1}", 
+                    new Object[]{fileName, objCount});
         }
       }
 
       Transaction.getCurrent().commit();
       Transaction.getCurrent().close();
       long timeDiff = System.currentTimeMillis() - timeStart;
-      LOG.info("Time: {} sec", (timeDiff/1000.0));
+      LOG.log(Level.ALL, "Time: {0} sec", (timeDiff/1000.0));
       
     } catch (Exception ex) {
       ex.printStackTrace();
@@ -162,14 +166,16 @@ public class IngestCSV {
           for (Relationship rel : mapper.getRelationshipList()) {
             rel.getTargetList().fetchTargets();
             int count = rel.getTargetList().createMissingTargets();
-            LOG.info("created {} of {} objects", count, rel.toClassName());
+            LOG.log(Level.ALL, "created {0} of {1} objects", 
+                    new Object[]{count, rel.toClassName()});
           }
         }
         // fetch existing objects if available.
         if (doProcessClassKeys) {
           mapper.getClassTargetList().fetchTargets();
           int count = mapper.getClassTargetList().createMissingTargets();
-          LOG.info("created {} of {} objects", count, mapper.getClassName());
+          LOG.log(Level.ALL, "created {0} of {1} objects", 
+                  new Object[]{count, mapper.getClassName()});
         }
       }
       in.close();
@@ -183,9 +189,9 @@ public class IngestCSV {
         objCount++;
       }
     } catch (FileNotFoundException ex) {
-      LOG.error(ex.getMessage());
+      LOG.warning(ex.getMessage());
     } catch (IOException ex) {
-      LOG.error(ex.getMessage());
+      LOG.warning(ex.getMessage());
     }
     return objCount;
   }
@@ -225,10 +231,11 @@ public class IngestCSV {
         }
         int totalCount = files.size();
         for (String csvFile : files) {
-          LOG.info("Processing File: {}", csvFile);
+          LOG.log(Level.ALL, "Processing File: {0}", csvFile);
           ingester.ingest(csvFile, _params.mapperFile, 
                   _params.commitEvery, _params.isTabDelim);
-          LOG.info("Processed {} of {}", count, totalCount);
+          LOG.log(Level.ALL, "Processed {0} of {1}", 
+                  new Object[]{count, totalCount});
           count++;
         }
       } catch (IOException x) {

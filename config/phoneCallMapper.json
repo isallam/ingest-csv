@@ -28,6 +28,7 @@
 									{ "SchemaName": "latitude",  "RawName": "to_latitude" },
 									{ "SchemaName": "longitude", "RawName": "to_longitude" }
 								]
-							}]
+							}],
+  "DateTimeFormat": "y-M-d'T'H:m:s.n"
 }
 

@@ -63,6 +63,9 @@ class IngestMapper {
   private static String ToClassJSON = "ToClass";
   private static String ToClassRelationshipNameJSON = "ToClassRelationshipName";
   private static String KeyJSON = "Key";
+  private static String DateFormatJSON = "DateFormat";
+  private static String DateTimeFormatJSON = "DateTimeFormat";
+  private static String TimeFormatJSON = "TimeFormat";
   
   private String className;
   private TargetKey classKey = null;
@@ -74,6 +77,9 @@ class IngestMapper {
   protected List<Relationship> relationshipList = new ArrayList<>();
   
   private static final Logger LOG = LoggerFactory.getLogger(IngestMapper.class.getName());
+  private String dateFormat = "dd-MM-yyyy";
+  private String datetimeFormat = "yyyy-MM-dd'T'HH:mm:ss.n";
+  private String timeFormat = "HH:mm:ss.n";
   
   IngestMapper() {
     
@@ -98,7 +104,21 @@ class IngestMapper {
       JsonArray jsonArray = json.get(RelationshipsJSON).getAsJsonArray();
       processRelationships(jsonArray);
     }
+    
+    if (json.has(DateFormatJSON)) {
+      dateFormat = json.get(DateFormatJSON).getAsString();
+      LOG.info(">> DateFormat: {}", dateFormat);
+    }
 
+    if (json.has(DateTimeFormatJSON)) {
+      datetimeFormat = json.get(DateTimeFormatJSON).getAsString();
+      LOG.info(">> DateTimeFormat: {}", datetimeFormat);
+    }
+
+    if (json.has(TimeFormatJSON)) {
+      timeFormat = json.get(TimeFormatJSON).getAsString();
+      LOG.info(">> TimeFormat: {}", timeFormat);
+    }
   }
   
   public String getClassName() {
@@ -243,6 +263,18 @@ class IngestMapper {
 
   TargetKey getClassKey() {
     return classKey;
+  }
+
+  String getDateFormat() {
+    return dateFormat;
+  }
+
+  String getDateTimeFormat() {
+    return datetimeFormat;
+  }
+
+  String getTimeFormat() {
+    return timeFormat;
   }
   
 

@@ -162,8 +162,10 @@ public class TargetList {
       targetKeyBuilder = new ObjectTargetKeyBuilder(objyClass);
       for (Property keyValuePair : targetInfo.nameValues)
       {
-//        System.out.println("Add to targetKeyBuilder: " + keyValuePair.attrName +
+//        System.out.println("... Add to targetKeyBuilder: " + keyValuePair.attrName +
 //                ", val: " + keyValuePair.attrValue);
+        Variable var = new Variable(keyValuePair.attrValue);
+//        System.out.println("... ... type of val:" + keyValuePair.attrValue.getClass().getName());
         targetKeyBuilder.add(keyValuePair.attrName, new Variable(keyValuePair.attrValue));
       }
       targetKey = targetKeyBuilder.build();

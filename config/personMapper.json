@@ -8,6 +8,7 @@
                {"SchemaName": "middle_name",   "RawName": "middle_name"},
                {"SchemaName": "last_name",     "RawName": "last_name"},
                {"SchemaName": "sex",           "RawName": "sex"},
-               {"SchemaName": "date_of_birth", "RawName": "date_of_birth"}]
+               {"SchemaName": "date_of_birth", "RawName": "date_of_birth"}],
+	"DateFormat": "d/M/y"
 }
 

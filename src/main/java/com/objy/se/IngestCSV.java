@@ -19,6 +19,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.objy.db.TransactionState;
 import com.objy.se.utils.Relationship;
 import java.io.File;
 import java.nio.charset.Charset;
@@ -78,8 +79,10 @@ public class IngestCSV {
     } catch (IOException ioEx) {
       LOG.error(ioEx.getMessage());
     }     
+    
+    Transaction tx = null;
     try {
-      Transaction tx = new Transaction(TransactionMode.READ_UPDATE, "spark_write");
+      tx = new Transaction(TransactionMode.READ_UPDATE, "spark_write");
       long timeStart = System.currentTimeMillis();
       // schemaManager need to be initialized within a transaction to cahce 
       // meta data information.
@@ -116,6 +119,10 @@ public class IngestCSV {
       LOG.info("Time: {} sec", (timeDiff/1000.0));
       
     } catch (Exception ex) {
+      if (tx != null && tx.getState() == TransactionState.ACTIVE) {
+        tx.abort();
+        LOG.error("Transaction aborted!!!");
+      }
       ex.printStackTrace();
     }
   }

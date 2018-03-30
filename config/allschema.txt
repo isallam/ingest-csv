@@ -46,7 +46,7 @@ UPDATE SCHEMA
 
 	CREATE CLASS Location
 	{
-			latitude:      Real,
-			longitude:     Real
+			latitude:      Real {Storage: b32},
+			longitude:     Real {Storage: b32}
 	}
 };

@@ -15,15 +15,24 @@ import com.objy.data.List;
 import com.objy.data.LogicalType;
 import com.objy.data.Reference;
 import com.objy.data.Variable;
+import com.objy.db.DateTime;
+import com.objy.db.DateTime.TimeKind;
 import com.objy.se.utils.Property;
 import com.objy.se.utils.Relationship;
 import com.objy.se.utils.RelationshipRef;
 import com.objy.se.utils.TargetList;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 //import java.util.logging.Level;
 import org.apache.commons.csv.CSVRecord;
@@ -38,6 +47,9 @@ import org.slf4j.LoggerFactory;
 public class ClassAccessor {
 
   private static final Logger LOG = LoggerFactory.getLogger(ClassAccessor.class.getName());
+  private DateTimeFormatter dateFormatter;
+  private DateTimeFormatter dateTimeFormatter;
+  private DateTimeFormatter timeFormatter;
   
   class AttributeInfo {
     private Attribute   _attribute;
@@ -230,10 +242,12 @@ public class ClassAccessor {
         break;
       case DATE:
         {
-          try {
-            Date date = DateFormat.getDateInstance().parse(strValue);
-            retValue = date;
-          } catch (ParseException ex) {
+          try {            
+            LocalDate ldate = LocalDate.parse(strValue, dateFormatter);
+//            System.out.println("... ... year: " + ldate.getYear() + " - month:" + ldate.getMonthValue());
+            retValue = new com.objy.db.Date(ldate.getYear(), 
+                    ldate.getMonthValue(), ldate.getDayOfMonth());
+          } catch (DateTimeParseException ex) {
             LOG.error(ex.toString());
             throw new IllegalStateException("Possible invalid configuration... check mapper vs. schema" +
                      "... or check records for invalid values");
@@ -243,9 +257,18 @@ public class ClassAccessor {
       case DATE_TIME:
         {
           try {
-            Date date = DateFormat.getDateTimeInstance().parse(strValue);
-            retValue = date;
-          } catch (ParseException ex) {
+//            System.out.println(".... formatter: " + mapper.getDateTimeFormat());
+            LocalDateTime ldt = LocalDateTime.parse(strValue, dateTimeFormatter);
+//            System.out.println("... ... year: " + ldt.getYear() + 
+//                    " - month:" + ldt.getMonthValue() + " - day: " +
+//                    ldt.getDayOfMonth() + " - hour: " + ldt.getHour() +
+//                    " - min: " + ldt.getMinute() + " - sec: " + 
+//                    ldt.getSecond() + " - nsec: " + ldt.getNano() );
+            //retValue = new com.objy.db.DateTime(date.getTime(), TimeKind.LOCAL);
+            retValue = new com.objy.db.DateTime(ldt.getYear(), ldt.getMonthValue(),
+                              ldt.getDayOfMonth(), ldt.getHour(), ldt.getMinute(), 
+                              ldt.getSecond(), ldt.getNano());
+          } catch (DateTimeParseException ex) {
             LOG.error(ex.toString());
             throw new IllegalStateException("Possible invalid configuration... check mapper vs. schema" +
                      "... or check records for invalid values");
@@ -255,9 +278,15 @@ public class ClassAccessor {
       case TIME:
         {
           try {
-            Date date = DateFormat.getTimeInstance().parse(strValue);
-            retValue = date;
-          } catch (ParseException ex) {
+//            System.out.println(".... formatter: " + mapper.getTimeFormat());
+            LocalDateTime ltime = LocalDateTime.parse(strValue, dateFormatter);
+//            System.out.println("... ... hour: " + ltime.getHour() +
+//                    " - min: " + ltime.getMinute() + " - sec: " + 
+//                    ltime.getSecond() + " - nsec: " + ltime.getNano() );
+            //retValue = new com.objy.db.DateTime(date.getTime(), TimeKind.LOCAL);
+            retValue = new com.objy.db.Time(ltime.getHour(), ltime.getMinute(),
+                              ltime.getSecond(), ltime.getNano());
+          } catch (DateTimeParseException ex) {
             LOG.error(ex.toString());
             throw new IllegalStateException("Possible invalid configuration... check mapper vs. schema" +
                      "... or check records for invalid values");
@@ -337,6 +366,9 @@ public class ClassAccessor {
 
   void setMapper(IngestMapper mapper) {
     this.mapper = mapper;
+    this.dateFormatter = DateTimeFormatter.ofPattern(mapper.getDateFormat());
+    this.dateTimeFormatter = DateTimeFormatter.ofPattern(mapper.getDateTimeFormat());
+
   }
 
   private boolean doListContainReference(List list, Instance value) {

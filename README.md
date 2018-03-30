@@ -2,7 +2,7 @@
 
 This project allow users to ingest any CSV file's data using a description of mapping between elements in the CSV file and the Schema in Thingspan database.
 
-For an example of the mapping file see .json files in the the config directory in conjunction with the allschema.txt file which is used to create the schema.
+For an example of the mapping file see **.json** files in the the **config** directory in conjunction with the allschema.txt file which is used to create the schema.
 
 ## The JSON mapper format
 There are various elements in the JSON file to all the code to process the CSV. The JSON mapper can be used with any CSV file as long as the raw data items defined in the mapper is available in the CSV file.
@@ -15,21 +15,30 @@ In general any CSV file will provide
 
 For example people.csv include person information only, but address.csv include, address information, location information and also relationship to the person owning the address (house/business)
 
-The Mapper sections are
-- "ClassName" : the main class that need to be generated from the CSV
-- "ClassKey"  : (optional) What identify the uniqueness of the object so a second process of the same file doesn duplicate the data.
-- "Integers"  : list of integer attributes in the schema and their corresponding columns name in the CSV file
-- "Strings"   : list of string attributes... (same as above)
-- "Floats"    : list of float attributes... (same as above)
-- "Dates"     : list of DateTime attributes... (same as above) [this type of attributes might not be fully implemented yet]
-- "Relationships" : list of class relationship details, here are the relationship elements
-    - "RelationshipName": name of the schema attribute that reference the relationship
-    - "ToClass"         : target type of the relationship
+### The Mapper sections are
+- **"ClassName"**     : the main class that need to be generated from the CSV
+- **"ClassKey"**      : (optional) What identify the uniqueness of the object so a second processing doesn duplicate the data.
+- **"Attributes"**    : list of attributes in the schema and their corresponding column names in the CSV file
+- **"Relationships"** : list of class relationship details, here are the relationship elements
+    - "RelationshipName"  : name of the schema attribute that reference the relationship
+    - "ToClass"           : target type of the relationship
     - "ToClassRelationshipName" : (optional) if there is a reverse relationship, this is the name
-    - "Key"             : a list of keys that represent the uniqueness of the related object and how they map from 
-                        schema attribute name to csv file column name
-                        (see AddressMapper.json for a complex type of keys)
-                        
+    - "Key"               : a list of keys that represent the uniqueness of the related object and how they map from 
+                            schema attribute name to csv file column name
+                            (see AddressMapper.json for a complex type of keys)
+
+- "DateFormat"     : (optinal) format string for the date type described [here](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html#predefined), default is: "dd-MM-yyyy"
+- "DateTimeFormat" : (optinal) format string for the DateTime type described [here](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html#predefined), default is: "yyyy-MM-dd'T'HH:mm:ss.n"
+- "TimeFormat"     : (optinal) format string for the Time type described [here](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html#predefined), default is: "HH:mm:ss.n"
+---
+
+### com.objy.se.IngestCSV Parameters are (*see buidl.gradle for usage*)
+- bootfile: "Name of the graph DB bootfile."
+- csvfile: "Name of the CSV file to ingest." for processing one file
+- csvfilePattern: "Quoted Pattern of the CSV files to ingest.", for processing many files with wild card.
+- mapper: "Name of the JSON mapper file."
+- isTabDelim: "Use Tab delimited fields" (default is a 'comma' delimited files)
+
 
 ## To run the test
 

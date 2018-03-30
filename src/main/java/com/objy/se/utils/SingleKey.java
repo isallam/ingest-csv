@@ -6,7 +6,6 @@
 package com.objy.se.utils;
 
 import com.objy.data.LogicalType;
-import org.apache.commons.csv.CSVRecord;
 
 /**
  *
@@ -15,8 +14,8 @@ import org.apache.commons.csv.CSVRecord;
 public class SingleKey implements TargetKey {
 
  //-------------------------------------------------------------------------
-  // most keys are single, but the ID object use a composite key that is
-  // the hash of both IDReference + IDType
+  // most keys are single, but it's possible to have and object that uses a 
+  // composite key formed from two columns to define uniqueness
   //----------------------------------------------------------------------s---
     protected String attrName;
     protected String rawFileAttrName;

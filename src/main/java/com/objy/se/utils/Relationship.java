@@ -16,28 +16,6 @@ import java.util.List;
  */
 public class Relationship {
 
-  public class RelationshipRef {
-    protected TargetKey key;
-    protected String refAttrName;
-    protected String revRefAttrName = null;
-    protected ClassAccessor revRefClassProxy = null;
-
-    public RelationshipRef(TargetKey key, String refAttrName, String revRefAttrName) {
-      this.key = key;
-      this.refAttrName = refAttrName;
-      this.revRefAttrName = revRefAttrName;
-    }
-
-    public TargetKey getKey() { return key; }
-    public String getRefAttrName() { return refAttrName; }
-    public String getRevRefAttrName() { return revRefAttrName; }
-    
-    public ClassAccessor getRevRefClassProxy() {
-      if (revRefClassProxy == null)
-        revRefClassProxy = SchemaManager.getInstance().getClassProxy(toClassName);
-      return revRefClassProxy;
-    }
-  }
   
   protected String toClassName = null;
   protected Boolean isToOne = true;
@@ -55,8 +33,10 @@ public class Relationship {
   
   public String toClassName() { return this.toClassName; }
   
-  public void add(TargetKey key, String refAttrName, String revRefAttrName) {
-    RelationshipRef relationshipRef = new RelationshipRef(key, refAttrName, revRefAttrName);
+  public void add(TargetKey key, String refAttrName, 
+          String toClassRelationshipName) {
+    RelationshipRef relationshipRef = new RelationshipRef(key, refAttrName, 
+            toClassRelationshipName, toClassName);
     relationshipRefList.add(relationshipRef);
   }
   

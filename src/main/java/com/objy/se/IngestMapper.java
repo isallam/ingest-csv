@@ -8,6 +8,7 @@ package com.objy.se;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.objy.se.utils.CompositeKey;
 import com.objy.se.utils.Relationship;
 import com.objy.se.utils.SingleKey;
@@ -30,11 +31,8 @@ import org.slf4j.LoggerFactory;
  * 
  * { 
  *   "ClassName": "name-of-class",
- *   ”Strings”: [{"SchemaName":“attribute”, "RawName": “name-of-column-in-source-data”}],
- *   “Integers”: [{"SchemaName":“attribute”, "RawName": “name-of-column-in-source-data”}],
- *   “Floats”: [{"SchemaName":“attribute”, "RawName": “name-of-column-in-source-data”}],
- *   “Dates”: [{"SchemaName":“attribute”, "RawName": “name-of-column-in-source-data”}],
- *   “Relationships”: 
+ *   "Attributes": [{"SchemaName":“attribute”, "RawName": “name-of-column-in-source-data”}],
+ *   "Relationships": 
  *   [
  *     {
  *       “RelationshipName”: “relationship-attribute”,
@@ -127,6 +125,7 @@ class IngestMapper {
 
       ClassAccessor classAccessor = SchemaManager.getInstance().getClassProxy(className);
       ArrayList<JsonObject> keys = new ArrayList<>();
+
       for (JsonElement keyElement : jsonArray) {
         JsonObject keyObj = (JsonObject) keyElement;
         keys.add(keyObj);
@@ -152,7 +151,7 @@ class IngestMapper {
         String keyRawName = keyObj.get(RawNameJSON).getAsString();
         // get the type of the keySchemaName 
         ClassAccessor.AttributeInfo attrInfo = classAccessor.getAttribute(keySchemaName);
-       classKey = new SingleKey(keySchemaName, keyRawName,
+        classKey = new SingleKey(keySchemaName, keyRawName,
                   attrInfo.logicalType());
       }
     }
@@ -162,7 +161,9 @@ class IngestMapper {
     for (JsonElement element : jsonArray) {
       JsonObject obj = (JsonObject) element;
       String relationshipName = obj.get(RelationshipNameJSON).getAsString();
-      String toClass = obj.get(ToClassJSON).getAsString();
+      //String toClass = obj.get(ToClassJSON).getAsString();
+      JsonPrimitive prim = obj.getAsJsonPrimitive(ToClassJSON);
+      String toClass = prim.getAsString();
       String toClassRelationshipName = null;
       if (obj.has(ToClassRelationshipNameJSON))
       {
@@ -176,10 +177,12 @@ class IngestMapper {
       
       JsonArray keyArray = obj.get(KeyJSON).getAsJsonArray();
       ArrayList<JsonObject> keys = new ArrayList<>();
+
       for (JsonElement keyElement : keyArray) {
         JsonObject keyObj = (JsonObject) keyElement;
         keys.add(keyObj);
       }
+
       if (keys.size() > 1) // composite key
       {
         ArrayList<SingleKey> singleKeys = new ArrayList<>();

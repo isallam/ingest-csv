@@ -75,7 +75,7 @@ public class TargetList {
     Property[] nameValues = new Property[singleKeywords.length];
     for (int i = 0; i < singleKeywords.length; i++) {
       String value = record.get(singleKeywords[i].rawFileAttrName);
-      Variable var = targetClass.getCorrectValue(value, singleKeywords[i].logicalType);
+      Object var = targetClass.getCorrectValue(value, singleKeywords[i].logicalType);
       nameValues[i] = new Property(
             singleKeywords[i].attrName, 
             var);
@@ -111,11 +111,11 @@ public class TargetList {
   private Instance getTargetObjectForKyes(CSVRecord record, 
                         SingleKey... keys) {
 //    Object[] values = new Property[keys.length];
-    List<Variable> values = new ArrayList<>();
+    List<Object> values = new ArrayList<>();
     for (SingleKey key : keys) {
       //values[i] = record.get(key.rawFileAttrName);
       String value = record.get(key.rawFileAttrName);
-      Variable var = targetClass.getCorrectValue(value, key.logicalType);
+      //Variable var = targetClass.getCorrectValue(value, key.logicalType);
       values.add(targetClass.getCorrectValue(value, key.logicalType));
     }
     return getTargetObject(values);
@@ -129,15 +129,15 @@ public class TargetList {
     return value.hashCode();
   }
   
-  private static long hash(List<Variable> values) {
+  private static long hash(List<Object> values) {
     String value = "";
-    for (Variable obj : values) {
+    for (Object obj : values) {
       value += obj.toString();
     }
     return value.hashCode();
   }
 
-  private Instance getTargetObject(List<Variable> values)
+  private Instance getTargetObject(List<Object> values)
   {
     long hashValue = hash(values);
     Instance instance = null;

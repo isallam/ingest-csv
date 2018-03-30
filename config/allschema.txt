@@ -29,7 +29,7 @@ UPDATE SCHEMA
 			id:            Integer {Encoding: Unsigned},
 			phone_number:  String,
 			owner:         Reference {Referenced: Person},
-			calls:         List {Element: Reference{REferenced: PhoneCall}, CollectionName: SegmentedArray}
+			calls:         List {Element: Reference{REferenced: PhoneCall}, CollectionTypeName: SegmentedArray}
 	}
 
 	CREATE CLASS PhoneCall
@@ -46,7 +46,7 @@ UPDATE SCHEMA
 
 	CREATE CLASS Location
 	{
-			latitude:      Float,
-			longitude:     Float
+			latitude:      Real,
+			longitude:     Real
 	}
 };

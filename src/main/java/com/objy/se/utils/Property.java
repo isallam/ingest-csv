@@ -14,9 +14,9 @@ import com.objy.data.Variable;
  */
 public class Property {
   String attrName;
-  Variable attrValue;
+  Object attrValue;
 
-  Property(String name, Variable value) {
+  Property(String name, Object value) {
     attrName = name;
     attrValue = value;
   }
@@ -25,7 +25,7 @@ public class Property {
     return attrName;
   }
   
-  public Variable getValue() {
+  public Object getValue() {
     return attrValue;
   }
 }

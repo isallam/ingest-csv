@@ -2,7 +2,6 @@ package com.objy.se;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.esotericsoftware.wildcard.Paths;
 
 import com.objy.db.Connection;
 import com.objy.db.Objy;
@@ -20,8 +19,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader; 
 import com.objy.se.utils.Relationship;
+import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 import org.slf4j.Logger;
@@ -37,8 +41,8 @@ public class IngestCSV {
     public String bootFile = null;
     @Parameter(names = "-csvfile", description = "Name of the CSV file to ingest.")
     public String csvFile = null;
-    @Parameter(names = "-csvFiles", description = "Quoted Pattern of the CSV files to ingest.")
-    public String csvFiles = null;
+    @Parameter(names = "-csvfilePattern", description = "Quoted Pattern of the CSV files to ingest.")
+    public String csvfilePattern = null;
     @Parameter(names = "-mapper", description = "Name of the JSON mapper file.")
     public String mapperFile = null;
     @Parameter(names = "-isTabDelim", description = "File use Tab delimited fields")
@@ -49,19 +53,31 @@ public class IngestCSV {
 
   private static _Params _params = new _Params();
 
+  static String readFile(String filename, Charset encoding) 
+    throws IOException 
+  {
+    byte[] encoded = Files.readAllBytes(java.nio.file.Paths.get(filename));
+    return new String(encoded, encoding);
+  }
+  
   private void ingest(String csvFile, String mapperFile, int commitEvery, 
           boolean isTabDelim) {
     JsonElement jsonMapper = null;
     // read the mapper file as JSON and convert it to a Mapper object
     try {
+      
       Gson gson = new Gson();
-      JsonReader reader = new JsonReader(new FileReader(mapperFile));
+      String jsonString = readFile(mapperFile, StandardCharsets.UTF_8);
+      //System.out.println("JSON String: " + jsonString);
+      
       JsonParser parser = new JsonParser();
-      jsonMapper = parser.parse(reader);
+      jsonMapper = parser.parse(jsonString);
+      
     } catch (FileNotFoundException ex) {
       LOG.error(ex.getMessage());
-    }
-    
+    } catch (IOException ioEx) {
+      LOG.error(ioEx.getMessage());
+    }     
     try {
       Transaction tx = new Transaction(TransactionMode.READ_UPDATE, "spark_write");
       long timeStart = System.currentTimeMillis();
@@ -91,7 +107,6 @@ public class IngestCSV {
             // might change that to iterate and commit as needed.
             checkpoint(tx);
             LOG.info("Done {} Ingest... Total Objects: {}", fileName, objCount);
-          
         }
       }
 
@@ -111,7 +126,7 @@ public class IngestCSV {
   }
 
   private int processFile(String fileName, IngestMapper mapper, boolean isTabDelim) {
-    LOG.info("Starting Ingest for: {}: ", fileName);
+    //LOG.info("Starting Ingest for: {}: ", fileName);
 
     ClassAccessor classProxy = SchemaManager.getInstance().getClassProxy(mapper.getClassName());
     classProxy.setMapper(mapper);
@@ -185,24 +200,41 @@ public class IngestCSV {
     // some intialization for Thingspan.
     new Connection(_params.bootFile);
     Objy.enableConfiguration();
+
     if (_params.csvFile != null)
     {
       ingester.ingest(_params.csvFile, _params.mapperFile, 
               _params.commitEvery, _params.isTabDelim);
     }
-    else if (_params.csvFiles != null)
+    else if (_params.csvfilePattern != null)
     {
-      Paths paths = new Paths();
-      paths.glob(null, _params.csvFiles);
+      System.out.println("processing files: " + _params.csvfilePattern);
       int count = 1;
-      int totalCount = paths.getPaths().size();
-      for(String csvFile : paths.getPaths())
-      {
-        LOG.info("Processing File: {}", csvFile);
-        ingester.ingest(csvFile, _params.mapperFile, 
-                _params.commitEvery, _params.isTabDelim);
-        LOG.info("Processed {} of {}", count, totalCount);
-        count++;
+      // get the path section from the pattern.
+      int pathPartEnd = _params.csvfilePattern.lastIndexOf(File.separator);
+      String pathString = _params.csvfilePattern.substring(0, pathPartEnd);
+      String globString = _params.csvfilePattern.substring(pathPartEnd+1);
+//      System.out.println("Path: " + pathString);
+//      System.out.println("Glob: " + globString);
+      try {
+        Path dir = FileSystems.getDefault().getPath(pathString);
+        DirectoryStream<Path> ds = Files.newDirectoryStream(dir, globString);
+        List<String> files = new ArrayList<String>();
+        for(Path path : ds) {
+          files.add(path.toString());
+        }
+        int totalCount = files.size();
+        for (String csvFile : files) {
+          LOG.info("Processing File: {}", csvFile);
+          ingester.ingest(csvFile, _params.mapperFile, 
+                  _params.commitEvery, _params.isTabDelim);
+          LOG.info("Processed {} of {}", count, totalCount);
+          count++;
+        }
+      } catch (IOException x) {
+        // IOException can never be thrown by the iteration.
+        // In this snippet, it can // only be thrown by newDirectoryStream.
+        System.err.println(x);
       }
     }
   }
@@ -217,7 +249,7 @@ public class IngestCSV {
       commander.usage();
       System.exit(1);
     }
-    if (_params.csvFile == null && _params.csvFiles == null) {
+    if (_params.csvFile == null && _params.csvfilePattern == null) {
       System.err.println("You must provide a CSV file or file pattern to ingest");
       commander.usage();
       System.exit(1);
